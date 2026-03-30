@@ -4,6 +4,7 @@ import { useGameActions } from '@/hooks/useGameActions';
 import { useGameStore } from '@/store/gameStore';
 import { useAuthStore } from '@/store/authStore';
 import SegmentedControl from '@/components/SegmentedControl';
+import HowToPlayModal from '@/components/HowToPlayModal';
 import { getAvatarColor } from '@/pages/ProfilePage';
 
 function Spinner() {
@@ -20,6 +21,7 @@ export default function LandingPage() {
   const [roomCode, setRoomCode] = useState(urlRoomId ?? '');
   const [mode, setMode] = useState<'create' | 'join'>(urlRoomId ? 'join' : 'create');
   const [loading, setLoading] = useState(false);
+  const [showRules, setShowRules] = useState(false);
 
   useEffect(() => {
     if (urlRoomId) {
@@ -130,8 +132,17 @@ export default function LandingPage() {
           >
             {loading ? <Spinner /> : mode === 'create' ? 'Create Game' : 'Join Game'}
           </button>
+
+          <button
+            onClick={() => setShowRules(true)}
+            className="w-full text-white/30 hover:text-white/60 text-sm font-medium py-3 transition-colors"
+          >
+            How to play?
+          </button>
         </div>
       </div>
+
+      {showRules && <HowToPlayModal onClose={() => setShowRules(false)} />}
     </div>
   );
 }
