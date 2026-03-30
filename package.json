@@ -1,0 +1,13 @@
+{
+  "name": "shxthead",
+  "private": true,
+  "workspaces": ["shared", "client", "server"],
+  "scripts": {
+    "dev": "npm run build -w shxthead-shared && concurrently \"npm run dev -w shxthead-server\" \"npm run dev -w shxthead-client\"",
+    "build": "npm run build -w shxthead-shared && npm run build -w shxthead-server && npm run build -w shxthead-client",
+    "start": "npm run start -w shxthead-server"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
