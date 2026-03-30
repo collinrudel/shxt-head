@@ -20,10 +20,10 @@
     box-shadow: 0 0 0 2px #facc15, 0 0 16px rgba(250, 204, 21, 0.5), 0 8px 16px rgba(0, 0, 0, 0.5);
   }
   .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom, 16px);
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
   .pt-safe {
-    padding-top: env(safe-area-inset-top, 0px);
+    padding-top: max(20px, env(safe-area-inset-top));
   }
   .glow-yellow {
     text-shadow: 0 0 20px rgba(250, 204, 21, 0.5), 0 0 40px rgba(250, 204, 21, 0.2);
