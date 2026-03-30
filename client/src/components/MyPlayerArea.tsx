@@ -75,6 +75,12 @@ export default function MyPlayerArea({ gameState }: MyPlayerAreaProps) {
 
   const { hand, faceUp, faceDown } = me.myCards;
 
+  // Sort hand by card value ascending (2 → A)
+  const sortedHand = [...hand].sort((a, b) => a.value - b.value);
+
+  // Fan overlap: compress cards horizontally when hand is large
+  const handOverlap = hand.length > 7 ? Math.min(28, (hand.length - 7) * 5) : 0;
+
   return (
     <div className="relative">
       {/* Face-down blind play confirmation modal */}
@@ -129,7 +135,7 @@ export default function MyPlayerArea({ gameState }: MyPlayerAreaProps) {
           <p className={`text-xs text-center mb-1 transition-colors ${phase === 'faceUp' ? 'text-white/50' : 'text-white/20'}`}>
             Face-up
           </p>
-          <div className="flex justify-center gap-2 flex-wrap">
+          <div className="flex justify-center gap-2">
             {faceUp.map(card => (
               <Card
                 key={card.id}
@@ -147,22 +153,30 @@ export default function MyPlayerArea({ gameState }: MyPlayerAreaProps) {
           </div>
         </div>
 
-        {/* Hand */}
+        {/* Hand — sorted 2→A, fanned when large */}
         <div>
           <p className={`text-xs text-center mb-1 transition-colors ${phase === 'hand' ? 'text-white/50' : 'text-white/20'}`}>
             Hand
           </p>
-          <div className="flex justify-center gap-1 flex-wrap">
-            {hand.map(card => (
-              <Card
+          <div className="flex justify-center">
+            {sortedHand.map((card, i) => (
+              <div
                 key={card.id}
-                card={card}
-                size="md"
-                selected={selectedCardIds.includes(card.id)}
-                onClick={() => handleCardClick(card, 'hand')}
-                disabled={(!isMyTurn && !canSlam) || phase !== 'hand'}
-                dimmed={phase !== 'hand'}
-              />
+                className="relative transition-all"
+                style={{
+                  marginLeft: i > 0 ? `-${handOverlap}px` : undefined,
+                  zIndex: selectedCardIds.includes(card.id) ? 50 : i,
+                }}
+              >
+                <Card
+                  card={card}
+                  size="md"
+                  selected={selectedCardIds.includes(card.id)}
+                  onClick={() => handleCardClick(card, 'hand')}
+                  disabled={(!isMyTurn && !canSlam) || phase !== 'hand'}
+                  dimmed={phase !== 'hand'}
+                />
+              </div>
             ))}
             {hand.length === 0 && (
               <span className="text-xs text-green-700">empty</span>
