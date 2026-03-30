@@ -34,16 +34,16 @@ export default function Card({ card, faceDown, selected, onClick, disabled, size
       <div
         onClick={disabled ? undefined : onClick}
         className={`
-          ${sizeClass} rounded-lg border-2 border-green-700 flex items-center justify-center
-          bg-gradient-to-br from-blue-900 to-blue-800
-          card-shadow cursor-pointer
-          ${selected ? 'ring-2 ring-yellow-400 -translate-y-2' : ''}
+          ${sizeClass} rounded-xl border border-blue-700/60 flex items-center justify-center
+          bg-gradient-to-br from-indigo-900 via-blue-900 to-blue-950
+          card-shadow select-none
+          ${selected ? 'card-shadow-selected -translate-y-3' : ''}
           ${dimmed ? 'opacity-50' : ''}
-          ${onClick && !disabled ? 'active:scale-95 transition-transform' : ''}
+          ${onClick && !disabled ? 'cursor-pointer active:scale-95 transition-transform' : ''}
         `}
         style={{ minHeight: size === 'lg' ? '5.5rem' : undefined }}
       >
-        <span className="text-blue-400 text-lg select-none">🂠</span>
+        <span className="text-blue-500/50 text-base select-none">✦</span>
       </div>
     );
   }
@@ -52,20 +52,19 @@ export default function Card({ card, faceDown, selected, onClick, disabled, size
     <div
       onClick={disabled ? undefined : onClick}
       className={`
-        ${sizeClass} rounded-lg border-2 border-gray-200 flex flex-col justify-between p-1
+        ${sizeClass} rounded-xl border border-gray-100 flex flex-col justify-between p-1
         bg-white select-none
-        card-shadow
-        ${selected ? 'card-shadow-selected -translate-y-2' : ''}
+        ${selected ? 'card-shadow-selected -translate-y-3' : 'card-shadow'}
         ${dimmed ? 'opacity-40' : ''}
         ${onClick && !disabled ? 'cursor-pointer active:scale-95 transition-transform' : ''}
       `}
       style={{ minHeight: size === 'lg' ? '5.5rem' : undefined }}
     >
-      <div className={`font-black leading-none text-left ${isRed ? 'text-red-600' : 'text-gray-900'}`}>
+      <div className={`font-extrabold leading-none text-left ${isRed ? 'text-red-500' : 'text-gray-900'}`}>
         <div>{card.rank}</div>
         <div>{SUIT_SYMBOLS[card.suit]}</div>
       </div>
-      <div className={`font-black leading-none text-right rotate-180 ${isRed ? 'text-red-600' : 'text-gray-900'}`}>
+      <div className={`font-extrabold leading-none text-right rotate-180 ${isRed ? 'text-red-500' : 'text-gray-900'}`}>
         <div>{card.rank}</div>
         <div>{SUIT_SYMBOLS[card.suit]}</div>
       </div>

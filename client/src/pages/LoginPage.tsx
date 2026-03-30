@@ -5,6 +5,12 @@ import { useAuthStore } from '@/store/authStore';
 import { initSocket } from '@/socket';
 import { AuthUser } from '@shared/types';
 
+function Spinner() {
+  return <span className="inline-block w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />;
+}
+
+const inputClass = 'w-full bg-white/10 px-4 py-3.5 rounded-2xl text-white placeholder-white/30 focus:outline-none focus:bg-white/15 focus:ring-2 focus:ring-yellow-400/70 transition-all';
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const setAuth = useAuthStore(s => s.setAuth);
@@ -34,53 +40,41 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 animate-fade-in">
       <div className="w-full max-w-sm">
-        <h1 className="text-5xl font-black text-center mb-2 tracking-tight">
-          <span className="text-white">Shxt</span>
-          <span className="text-yellow-400">Head</span>
+        <div className="flex justify-center mb-6">
+          <div className="w-16 h-16 rounded-2xl bg-felt flex items-center justify-center shadow-lg">
+            <span className="text-yellow-400 text-3xl font-black leading-none">S</span>
+          </div>
+        </div>
+        <h1 className="text-6xl font-black text-center mb-1 tracking-[-0.03em]">
+          <span className="text-white">Shxt</span><span className="text-yellow-400">Head</span>
         </h1>
-        <p className="text-center text-green-300 text-sm mb-8">Sign in to play</p>
+        <p className="text-center text-green-400/80 text-sm mb-10">The card game. Online.</p>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div>
-            <label className="block text-sm text-green-200 mb-1">Username</label>
-            <input
-              type="text"
-              value={username}
-              onChange={e => setUsername(e.target.value)}
-              placeholder="your_username"
-              autoCapitalize="none"
-              className="w-full bg-felt px-4 py-3 rounded-xl text-white placeholder-green-400 border border-felt-light focus:outline-none focus:ring-2 focus:ring-yellow-400"
-            />
+            <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">Username</label>
+            <input type="text" value={username} onChange={e => setUsername(e.target.value)}
+              placeholder="your_username" autoCapitalize="none" className={inputClass} />
           </div>
           <div>
-            <label className="block text-sm text-green-200 mb-1">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full bg-felt px-4 py-3 rounded-xl text-white placeholder-green-400 border border-felt-light focus:outline-none focus:ring-2 focus:ring-yellow-400"
-            />
+            <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">Password</label>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+              placeholder="••••••••" className={inputClass} />
           </div>
 
-          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 text-black font-bold py-4 rounded-xl text-lg transition-colors"
-          >
-            {loading ? '...' : 'Sign In'}
+          <button type="submit" disabled={loading}
+            className="w-full bg-gradient-to-b from-yellow-400 to-yellow-300 hover:from-yellow-300 hover:to-yellow-200 disabled:opacity-50 text-black font-bold py-4 rounded-2xl text-base shadow-lg shadow-yellow-400/20 transition-all flex items-center justify-center gap-2 mt-1">
+            {loading ? <Spinner /> : 'Sign In'}
           </button>
+
+          {error && <p className="text-red-400 text-sm text-center animate-fade-in">⚠ {error}</p>}
         </form>
 
-        <p className="text-center text-green-400 text-sm mt-6">
+        <p className="text-center text-white/40 text-sm mt-8">
           No account?{' '}
-          <Link to="/register" className="text-yellow-400 font-semibold underline">
-            Create one
-          </Link>
+          <Link to="/register" className="text-yellow-400 font-semibold">Create one</Link>
         </p>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { api } from '@/api';
 import { getSocket } from '@/socket';
 import { FriendWithPresence } from '@shared/types';
 import FriendRow from '@/components/FriendRow';
+import SegmentedControl from '@/components/SegmentedControl';
 
 interface PendingRequest {
   friendshipId: string;
@@ -16,6 +17,13 @@ interface SearchResult {
   username: string;
 }
 
+function avatarColor(name: string): string {
+  const colors = ['bg-indigo-600', 'bg-violet-600', 'bg-sky-600', 'bg-teal-600', 'bg-rose-600', 'bg-amber-600'];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length]!;
+}
+
 export default function FriendsPage() {
   const navigate = useNavigate();
   const [friends, setFriends] = useState<FriendWithPresence[]>([]);
@@ -23,7 +31,7 @@ export default function FriendsPage() {
   const [searchQ, setSearchQ] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
-  const [tab, setTab] = useState<'friends' | 'requests' | 'add'>('friends');
+  const [tab, setTab] = useState<'friends' | 'requests' | 'find'>('friends');
 
   const loadFriends = useCallback(async () => {
     const { friends: f } = await api.get<{ friends: FriendWithPresence[] }>('/api/friends');
@@ -40,19 +48,13 @@ export default function FriendsPage() {
     loadRequests();
   }, [loadFriends, loadRequests]);
 
-  // Live presence updates
   useEffect(() => {
     let socket: ReturnType<typeof getSocket>;
     try { socket = getSocket(); } catch { return; }
-
     const handler = (payload: { userId: string; isOnline: boolean; lastSeenAt: string }) => {
-      setFriends(prev =>
-        prev.map(f =>
-          f.userId === payload.userId
-            ? { ...f, isOnline: payload.isOnline, lastSeenAt: payload.lastSeenAt }
-            : f
-        )
-      );
+      setFriends(prev => prev.map(f =>
+        f.userId === payload.userId ? { ...f, isOnline: payload.isOnline, lastSeenAt: payload.lastSeenAt } : f
+      ));
     };
     socket.on('friends:presence_update', handler);
     return () => { socket.off('friends:presence_update', handler); };
@@ -65,9 +67,7 @@ export default function FriendsPage() {
       try {
         const { users } = await api.get<{ users: SearchResult[] }>(`/api/friends/search?q=${encodeURIComponent(searchQ)}`);
         setSearchResults(users);
-      } finally {
-        setSearching(false);
-      }
+      } finally { setSearching(false); }
     }, 300);
     return () => clearTimeout(t);
   }, [searchQ]);
@@ -97,36 +97,39 @@ export default function FriendsPage() {
   const offlineFriends = friends.filter(f => !f.isOnline);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <div className="flex items-center gap-3 px-4 pt-6 pb-4 border-b border-felt-light/30">
-        <button onClick={() => navigate('/')} className="text-green-300 text-sm">← Back</button>
+    <div className="min-h-screen flex flex-col animate-fade-in">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 pt-safe pt-6 pb-4">
+        <button onClick={() => navigate('/')} className="text-white/40 hover:text-white text-sm transition-colors">← Back</button>
         <h2 className="text-lg font-black text-white">Friends</h2>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-felt-light/30">
-        {(['friends', 'requests', 'add'] as const).map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`flex-1 py-3 text-sm font-semibold capitalize transition-colors ${
-              tab === t ? 'text-yellow-400 border-b-2 border-yellow-400' : 'text-green-400'
-            }`}
-          >
-            {t === 'requests' && requests.length > 0 ? `Requests (${requests.length})` : t === 'add' ? 'Add' : 'Friends'}
-          </button>
-        ))}
+      {/* Segmented tabs */}
+      <div className="px-4 mb-4">
+        <SegmentedControl
+          options={[
+            { value: 'friends', label: 'Friends' },
+            { value: 'requests', label: 'Requests', badge: requests.length },
+            { value: 'find', label: 'Find' },
+          ]}
+          value={tab}
+          onChange={setTab}
+        />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-2">
+      <div className="flex-1 overflow-y-auto px-4 py-1">
         {tab === 'friends' && (
           <>
             {friends.length === 0 && (
-              <p className="text-center text-green-500 py-8 text-sm">No friends yet. Use the Add tab to find people!</p>
+              <div className="text-center py-12">
+                <p className="text-4xl mb-3">👥</p>
+                <p className="text-white/40 text-sm">No friends yet.</p>
+                <p className="text-white/25 text-xs mt-1">Use Find to add people.</p>
+              </div>
             )}
             {onlineFriends.length > 0 && (
               <div className="mb-2">
-                <p className="text-xs text-green-500 py-2">Online</p>
+                <p className="text-[11px] tracking-widest uppercase text-white/30 font-semibold py-2">Online</p>
                 {onlineFriends.map(f => (
                   <FriendRow key={f.friendshipId} friend={f} onRemove={() => handleRemove(f.friendshipId)} />
                 ))}
@@ -134,7 +137,7 @@ export default function FriendsPage() {
             )}
             {offlineFriends.length > 0 && (
               <div>
-                <p className="text-xs text-green-500 py-2">Offline</p>
+                <p className="text-[11px] tracking-widest uppercase text-white/30 font-semibold py-2">Offline</p>
                 {offlineFriends.map(f => (
                   <FriendRow key={f.friendshipId} friend={f} onRemove={() => handleRemove(f.friendshipId)} />
                 ))}
@@ -146,7 +149,10 @@ export default function FriendsPage() {
         {tab === 'requests' && (
           <>
             {requests.length === 0 && (
-              <p className="text-center text-green-500 py-8 text-sm">No pending requests.</p>
+              <div className="text-center py-12">
+                <p className="text-4xl mb-3">📬</p>
+                <p className="text-white/40 text-sm">No pending requests.</p>
+              </div>
             )}
             {requests.map(r => (
               <FriendRow
@@ -160,31 +166,29 @@ export default function FriendsPage() {
           </>
         )}
 
-        {tab === 'add' && (
-          <div className="py-2">
+        {tab === 'find' && (
+          <div className="py-1">
             <input
               type="text"
               value={searchQ}
               onChange={e => setSearchQ(e.target.value)}
               placeholder="Search by username..."
               autoCapitalize="none"
-              className="w-full bg-felt px-4 py-3 rounded-xl text-white placeholder-green-400 border border-felt-light focus:outline-none focus:ring-2 focus:ring-yellow-400 mb-4"
+              className="w-full bg-white/10 px-4 py-3.5 rounded-2xl text-white placeholder-white/30 focus:outline-none focus:bg-white/15 focus:ring-2 focus:ring-yellow-400/70 transition-all mb-4"
             />
-            {searching && <p className="text-center text-green-400 text-sm">Searching...</p>}
+            {searching && <p className="text-center text-white/40 text-sm">Searching...</p>}
             {!searching && searchQ.length >= 2 && searchResults.length === 0 && (
-              <p className="text-center text-green-500 text-sm">No users found.</p>
+              <p className="text-center text-white/30 text-sm">No users found.</p>
             )}
             {searchResults.map(u => (
-              <div key={u.userId} className="flex items-center justify-between py-3 border-b border-felt-light/30">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-felt-light flex items-center justify-center font-bold text-white text-sm">
-                    {u.username[0]?.toUpperCase()}
-                  </div>
-                  <span className="text-white font-semibold">{u.username}</span>
+              <div key={u.userId} className="flex items-center gap-3 py-3 border-b border-white/5 last:border-0">
+                <div className={`w-9 h-9 rounded-full ${avatarColor(u.username)} flex items-center justify-center font-bold text-white text-sm flex-shrink-0`}>
+                  {u.username[0]?.toUpperCase()}
                 </div>
+                <span className="text-white font-semibold flex-1 text-[15px]">{u.username}</span>
                 <button
                   onClick={() => handleAddFriend(u.username)}
-                  className="bg-green-500 hover:bg-green-400 text-white text-xs font-bold px-3 py-1.5 rounded-lg"
+                  className="bg-green-500 hover:bg-green-400 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-colors"
                 >
                   Add
                 </button>
