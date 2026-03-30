@@ -61,22 +61,35 @@ export default function LandingPage() {
     <div className="min-h-screen flex flex-col px-4 animate-fade-in">
       {/* Nav bar */}
       <div className="flex items-center justify-between" style={{ paddingTop: 'max(20px, env(safe-area-inset-top))', paddingBottom: '12px' }}>
-        <button
-          onClick={() => navigate('/friends')}
-          className="text-sm font-semibold text-white/50 hover:text-white/90 transition-colors px-1 py-1"
-        >
-          Friends
-        </button>
+        {user?.isGuest ? (
+          <div className="w-16" />
+        ) : (
+          <button
+            onClick={() => navigate('/friends')}
+            className="text-sm font-semibold text-white/50 hover:text-white/90 transition-colors px-1 py-1"
+          >
+            Friends
+          </button>
+        )}
         <h1 className="text-xl font-black tracking-[-0.02em]">
           <span className="text-white">Shxt</span><span className="text-yellow-400">Head</span>
         </h1>
-        <button
-          onClick={() => navigate('/profile')}
-          className={`w-9 h-9 rounded-full ${avatarColor} flex items-center justify-center text-white font-bold text-sm shadow-md active:scale-95 transition-transform`}
-          aria-label="Profile"
-        >
-          {user?.username[0]?.toUpperCase()}
-        </button>
+        {user?.isGuest ? (
+          <button
+            onClick={() => navigate('/register')}
+            className="text-sm font-semibold text-yellow-400 hover:text-yellow-300 transition-colors px-1 py-1"
+          >
+            Sign Up
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate('/profile')}
+            className={`w-9 h-9 rounded-full ${avatarColor} flex items-center justify-center text-white font-bold text-sm shadow-md active:scale-95 transition-transform`}
+            aria-label="Profile"
+          >
+            {user?.username[0]?.toUpperCase()}
+          </button>
+        )}
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center">

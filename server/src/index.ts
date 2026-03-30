@@ -55,15 +55,15 @@ io.on('connection', (socket) => {
   // Track presence
   presenceManager.connect(userId, socket.id);
 
-  // Notify friends this user came online
-  notifyFriendsPresence(userId, true);
+  // Notify friends this user came online (guests have no friends)
+  if (!socket.data.isGuest) notifyFriendsPresence(userId, true);
 
   registerRoomHandlers(io, socket, roomManager);
   registerGameHandlers(io, socket, roomManager);
 
   socket.on('disconnect', async () => {
     await presenceManager.disconnect(userId);
-    notifyFriendsPresence(userId, false);
+    if (!socket.data.isGuest) notifyFriendsPresence(userId, false);
 
     // Handle room cleanup on disconnect
     const room = roomManager.getRoomByPlayerId(userId);

@@ -1,9 +1,29 @@
 import { Router } from 'express';
+import { randomUUID } from 'crypto';
 import prisma from '../db';
 import { hashPassword, verifyPassword, signToken } from '../auth';
 import { requireAuth } from '../middleware/authMiddleware';
 
 const router = Router();
+
+router.post('/guest', (req, res) => {
+  const { username } = req.body as { username?: string };
+
+  let name = username?.trim();
+  if (!name) {
+    name = 'Guest_' + randomUUID().slice(0, 4).toUpperCase();
+  } else if (name.length < 2 || name.length > 20) {
+    res.status(400).json({ error: 'Name must be 2–20 characters' });
+    return;
+  } else if (!/^[a-zA-Z0-9_ ]+$/.test(name)) {
+    res.status(400).json({ error: 'Name can only contain letters, numbers, underscores, and spaces' });
+    return;
+  }
+
+  const userId = randomUUID();
+  const token = signToken(userId, true);
+  res.json({ user: { id: userId, username: name, isGuest: true }, token });
+});
 
 router.post('/register', async (req, res) => {
   const { username, password } = req.body as { username?: string; password?: string };

@@ -122,6 +122,60 @@ export default function ProfilePage() {
 
   if (!user) return null;
 
+  if (user.isGuest) {
+    return (
+      <div className="min-h-screen flex flex-col animate-fade-in">
+        <div
+          className="flex items-center px-4 pb-4"
+          style={{ paddingTop: 'max(20px, env(safe-area-inset-top))' }}
+        >
+          <button onClick={() => navigate('/')} className="text-white/40 hover:text-white/80 transition-colors text-sm font-semibold">← Back</button>
+        </div>
+
+        <div className="flex flex-col px-4 pb-10 max-w-sm mx-auto w-full">
+          <div className="flex flex-col items-center py-8">
+            <div className="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center text-white text-4xl font-black mb-4 shadow-xl">
+              {user.username[0]?.toUpperCase()}
+            </div>
+            <p className="text-2xl font-black text-white tracking-tight">{user.username}</p>
+            <p className="text-xs text-white/30 mt-1">Guest</p>
+          </div>
+
+          <div className="bg-white/5 rounded-2xl p-5 mb-3 text-center">
+            <p className="text-white font-semibold mb-1">Playing as a guest</p>
+            <p className="text-white/40 text-sm mb-5">Create an account to save your stats, add friends, and keep your username.</p>
+            <button
+              onClick={() => navigate('/register')}
+              className="w-full bg-gradient-to-b from-yellow-400 to-yellow-300 text-black font-bold py-3.5 rounded-2xl text-sm shadow-lg shadow-yellow-400/20"
+            >
+              Create Account
+            </button>
+          </div>
+
+          <button
+            onClick={() => setShowSignOutConfirm(true)}
+            className="w-full bg-white/5 hover:bg-white/8 text-red-400 font-semibold py-4 rounded-2xl transition-colors text-sm"
+          >
+            Sign Out
+          </button>
+        </div>
+
+        {showSignOutConfirm && (
+          <div className="fixed inset-0 bg-black/70 flex items-end justify-center z-50 p-4">
+            <div className="bg-[#1a3a24] rounded-3xl p-6 w-full max-w-sm animate-slide-up">
+              <h3 className="font-black text-white text-lg mb-1">Sign out?</h3>
+              <p className="text-white/40 text-sm mb-6">Your guest session will end.</p>
+              <div className="flex flex-col gap-2">
+                <button onClick={handleSignOut} className="w-full bg-red-500 hover:bg-red-400 text-white font-bold py-3.5 rounded-2xl transition-colors">Sign Out</button>
+                <button onClick={() => setShowSignOutConfirm(false)} className="w-full bg-white/10 hover:bg-white/15 text-white font-semibold py-3.5 rounded-2xl transition-colors">Cancel</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col animate-fade-in">
       {/* Header */}

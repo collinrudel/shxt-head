@@ -12,11 +12,13 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return bcrypt.compare(password, hash);
 }
 
-export function signToken(userId: string): string {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
+export function signToken(userId: string, isGuest = false): string {
+  return jwt.sign({ userId, ...(isGuest && { isGuest: true }) }, JWT_SECRET, {
+    expiresIn: isGuest ? '24h' : '7d',
+  });
 }
 
-export function verifyToken(token: string): { userId: string } {
-  const payload = jwt.verify(token, JWT_SECRET) as { userId: string };
-  return { userId: payload.userId };
+export function verifyToken(token: string): { userId: string; isGuest?: boolean } {
+  const payload = jwt.verify(token, JWT_SECRET) as { userId: string; isGuest?: boolean };
+  return { userId: payload.userId, isGuest: payload.isGuest };
 }

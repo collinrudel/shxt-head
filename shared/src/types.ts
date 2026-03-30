@@ -112,6 +112,7 @@ export type AckCallback<T> = (response: { ok: boolean; error?: string; data?: T 
 export interface AuthUser {
   id: string;
   username: string;
+  isGuest?: boolean;
 }
 
 export interface FriendWithPresence {

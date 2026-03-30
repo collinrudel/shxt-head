@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/api';
+import { useAuthStore } from '@/store/authStore';
 import { getSocket } from '@/socket';
 import { FriendWithPresence } from '@shared/types';
 import FriendRow from '@/components/FriendRow';
@@ -26,6 +27,13 @@ function avatarColor(name: string): string {
 
 export default function FriendsPage() {
   const navigate = useNavigate();
+  const currentUser = useAuthStore(s => s.user);
+
+  // Guests don't have access to Friends
+  if (currentUser?.isGuest) {
+    navigate('/');
+    return null;
+  }
   const [friends, setFriends] = useState<FriendWithPresence[]>([]);
   const [requests, setRequests] = useState<PendingRequest[]>([]);
   const [searchQ, setSearchQ] = useState('');

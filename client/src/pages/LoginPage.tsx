@@ -9,6 +9,10 @@ function Spinner() {
   return <span className="inline-block w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />;
 }
 
+function SpinnerWhite() {
+  return <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />;
+}
+
 const inputClass = 'w-full bg-white/10 px-4 py-3.5 rounded-2xl text-white placeholder-white/30 focus:outline-none focus:bg-white/15 focus:ring-2 focus:ring-yellow-400/70 transition-all';
 
 export default function LoginPage() {
@@ -18,6 +22,10 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const [guestName, setGuestName] = useState('');
+  const [guestLoading, setGuestLoading] = useState(false);
+  const [guestError, setGuestError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +44,23 @@ export default function LoginPage() {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGuest = async () => {
+    setGuestError('');
+    setGuestLoading(true);
+    try {
+      const { user, token } = await api.post<{ user: AuthUser; token: string }>('/api/auth/guest', {
+        username: guestName.trim() || undefined,
+      });
+      setAuth(user, token);
+      initSocket(token).connect();
+      navigate('/');
+    } catch (err: unknown) {
+      setGuestError(err instanceof Error ? err.message : 'Failed to start guest session');
+    } finally {
+      setGuestLoading(false);
     }
   };
 
@@ -72,10 +97,39 @@ export default function LoginPage() {
           {error && <p className="text-red-400 text-sm text-center animate-fade-in">⚠ {error}</p>}
         </form>
 
-        <p className="text-center text-white/40 text-sm mt-8">
+        <p className="text-center text-white/40 text-sm mt-6">
           No account?{' '}
           <Link to="/register" className="text-yellow-400 font-semibold">Create one</Link>
         </p>
+
+        {/* Divider */}
+        <div className="flex items-center gap-3 my-6">
+          <div className="flex-1 h-px bg-white/10" />
+          <span className="text-white/25 text-xs font-semibold uppercase tracking-widest">or</span>
+          <div className="flex-1 h-px bg-white/10" />
+        </div>
+
+        {/* Guest play */}
+        <div className="flex flex-col gap-3">
+          <input
+            type="text"
+            value={guestName}
+            onChange={e => setGuestName(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleGuest()}
+            placeholder="Display name (optional)"
+            maxLength={20}
+            autoCapitalize="words"
+            className={inputClass}
+          />
+          <button
+            onClick={handleGuest}
+            disabled={guestLoading}
+            className="w-full bg-white/10 hover:bg-white/15 disabled:opacity-50 text-white font-bold py-4 rounded-2xl text-base transition-all flex items-center justify-center gap-2"
+          >
+            {guestLoading ? <SpinnerWhite /> : 'Play as Guest'}
+          </button>
+          {guestError && <p className="text-red-400 text-sm text-center animate-fade-in">⚠ {guestError}</p>}
+        </div>
       </div>
     </div>
   );

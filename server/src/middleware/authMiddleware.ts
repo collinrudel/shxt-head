@@ -7,6 +7,7 @@ declare global {
   namespace Express {
     interface Request {
       userId: string;
+      isGuest?: boolean;
     }
   }
 }
@@ -18,8 +19,9 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
     return;
   }
   try {
-    const { userId } = verifyToken(header.slice(7));
+    const { userId, isGuest } = verifyToken(header.slice(7));
     req.userId = userId;
+    req.isGuest = isGuest;
     next();
   } catch {
     res.status(401).json({ error: 'Invalid token' });
@@ -33,8 +35,9 @@ export function socketAuth(socket: Socket, next: (err?: Error) => void): void {
     return;
   }
   try {
-    const { userId } = verifyToken(token);
+    const { userId, isGuest } = verifyToken(token);
     socket.data.userId = userId;
+    socket.data.isGuest = isGuest ?? false;
     next();
   } catch {
     next(new Error('Invalid token'));
