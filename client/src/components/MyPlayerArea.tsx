@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { ClientGameState, Card as CardType } from '@shared/types';
 import { useGameStore } from '@/store/gameStore';
 import { useGameActions } from '@/hooks/useGameActions';
@@ -17,10 +16,11 @@ function getPlayerPhase(gameState: ClientGameState): 'hand' | 'faceUp' | 'faceDo
   return 'faceDown';
 }
 
+const byValue = (a: CardType, b: CardType) => a.value - b.value;
+
 export default function MyPlayerArea({ gameState }: MyPlayerAreaProps) {
   const { selectedCardIds, toggleCardSelection, clearSelection } = useGameStore();
   const actions = useGameActions();
-  const [pendingFaceDown, setPendingFaceDown] = useState<CardType | null>(null);
 
   const me = gameState.players.find(p => p.id === gameState.myPlayerId);
   if (!me?.myCards) return null;
@@ -32,15 +32,13 @@ export default function MyPlayerArea({ gameState }: MyPlayerAreaProps) {
   const handleCardClick = (card: CardType, source: 'hand' | 'faceUp' | 'faceDown') => {
     if (source === 'faceDown') {
       if (!isMyTurn) return;
-      // Show confirmation
-      setPendingFaceDown(card);
+      actions.playFaceDown(card.id);
       return;
     }
 
     if (!isMyTurn && !canSlam) return;
 
     if (canSlam && !isMyTurn) {
-      // In slam mode: toggle selection
       toggleCardSelection(card.id, true);
       return;
     }
@@ -67,46 +65,16 @@ export default function MyPlayerArea({ gameState }: MyPlayerAreaProps) {
     clearSelection();
   };
 
-  const handleFaceDownConfirm = () => {
-    if (!pendingFaceDown) return;
-    actions.playFaceDown(pendingFaceDown.id);
-    setPendingFaceDown(null);
-  };
-
   const { hand, faceUp, faceDown } = me.myCards;
 
-  // Sort hand by card value ascending (2 → A)
-  const sortedHand = [...hand].sort((a, b) => a.value - b.value);
+  const sortedHand = [...hand].sort(byValue);
+  const sortedFaceUp = [...faceUp].sort(byValue);
 
   // Fan overlap: compress cards horizontally when hand is large
   const handOverlap = hand.length > 7 ? Math.min(28, (hand.length - 7) * 5) : 0;
 
   return (
     <div className="relative">
-      {/* Face-down blind play confirmation modal */}
-      {pendingFaceDown && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#1a3a24] rounded-3xl p-6 w-full max-w-xs text-center">
-            <p className="text-white font-black text-lg mb-2">Play blind?</p>
-            <p className="text-white/40 text-sm mb-6">You can't see this card. If it doesn't play, you pick up the pile.</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setPendingFaceDown(null)}
-                className="flex-1 bg-white/10 hover:bg-white/15 text-white py-3.5 rounded-2xl font-bold transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleFaceDownConfirm}
-                className="flex-1 bg-gradient-to-b from-yellow-400 to-yellow-300 text-black py-3.5 rounded-2xl font-bold shadow-lg shadow-yellow-400/20"
-              >
-                Play it
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="flex flex-col gap-2 px-2">
         {/* Face-down row */}
         <div>
@@ -130,13 +98,13 @@ export default function MyPlayerArea({ gameState }: MyPlayerAreaProps) {
           </div>
         </div>
 
-        {/* Face-up row */}
+        {/* Face-up row — sorted */}
         <div>
           <p className={`text-xs text-center mb-1 transition-colors ${phase === 'faceUp' ? 'text-white/50' : 'text-white/20'}`}>
             Face-up
           </p>
           <div className="flex justify-center gap-2">
-            {faceUp.map(card => (
+            {sortedFaceUp.map(card => (
               <Card
                 key={card.id}
                 card={card}

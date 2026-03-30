@@ -24,9 +24,9 @@ export default function SwapPage() {
   const me = gameState.players.find(p => p.id === myPlayerId);
   if (!me?.myCards) return null;
 
-  // Build the current card state with swaps applied (for preview)
-  let previewHand = [...me.myCards.hand];
-  let previewFaceUp = [...me.myCards.faceUp];
+  // Build the current card state with swaps applied (for preview), sorted 2→A
+  let previewHand = [...me.myCards.hand].sort((a, b) => a.value - b.value);
+  let previewFaceUp = [...me.myCards.faceUp].sort((a, b) => a.value - b.value);
   for (const swap of swaps) {
     const hi = previewHand.findIndex(c => c.id === swap.handCardId);
     const fi = previewFaceUp.findIndex(c => c.id === swap.faceUpCardId);

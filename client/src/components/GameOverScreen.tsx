@@ -50,14 +50,12 @@ export default function GameOverScreen({ gameState }: GameOverScreenProps) {
         </p>
 
         <div className="flex flex-col gap-3 w-full max-w-xs mx-auto">
-          {isHost && (
-            <button
-              onClick={handlePlayAgain}
-              className="w-full bg-gradient-to-b from-yellow-400 to-yellow-300 text-black font-bold py-4 rounded-2xl text-base shadow-lg shadow-yellow-400/20"
-            >
-              Play Again
-            </button>
-          )}
+          <button
+            onClick={handlePlayAgain}
+            className="w-full bg-gradient-to-b from-yellow-400 to-yellow-300 text-black font-bold py-4 rounded-2xl text-base shadow-lg shadow-yellow-400/20"
+          >
+            Play Again
+          </button>
           <button
             onClick={handleLeave}
             className="w-full bg-white/10 hover:bg-white/15 text-white font-semibold py-3.5 rounded-2xl transition-colors"
