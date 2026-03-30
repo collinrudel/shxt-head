@@ -99,8 +99,11 @@ export default function FriendsPage() {
   return (
     <div className="min-h-screen flex flex-col animate-fade-in">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 pt-safe pt-6 pb-4">
-        <button onClick={() => navigate('/')} className="text-white/40 hover:text-white text-sm transition-colors">← Back</button>
+      <div
+        className="flex items-center gap-3 px-4 pb-4"
+        style={{ paddingTop: 'max(20px, env(safe-area-inset-top))' }}
+      >
+        <button onClick={() => navigate('/')} className="text-white/40 hover:text-white/80 text-sm font-semibold transition-colors">← Back</button>
         <h2 className="text-lg font-black text-white">Friends</h2>
       </div>
 
@@ -121,10 +124,9 @@ export default function FriendsPage() {
         {tab === 'friends' && (
           <>
             {friends.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-4xl mb-3">👥</p>
-                <p className="text-white/40 text-sm">No friends yet.</p>
-                <p className="text-white/25 text-xs mt-1">Use Find to add people.</p>
+              <div className="text-center py-16">
+                <p className="text-white/20 text-sm">No friends yet.</p>
+                <p className="text-white/15 text-xs mt-1">Use Find to add people.</p>
               </div>
             )}
             {onlineFriends.length > 0 && (
@@ -149,9 +151,8 @@ export default function FriendsPage() {
         {tab === 'requests' && (
           <>
             {requests.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-4xl mb-3">📬</p>
-                <p className="text-white/40 text-sm">No pending requests.</p>
+              <div className="text-center py-16">
+                <p className="text-white/20 text-sm">No pending requests.</p>
               </div>
             )}
             {requests.map(r => (
@@ -188,7 +189,7 @@ export default function FriendsPage() {
                 <span className="text-white font-semibold flex-1 text-[15px]">{u.username}</span>
                 <button
                   onClick={() => handleAddFriend(u.username)}
-                  className="bg-green-500 hover:bg-green-400 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-colors"
+                  className="bg-green-500 hover:bg-green-400 text-white text-xs font-bold px-4 py-2 rounded-2xl transition-colors"
                 >
                   Add
                 </button>

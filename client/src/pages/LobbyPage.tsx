@@ -64,31 +64,25 @@ export default function LobbyPage() {
 
   return (
     <div className="min-h-screen flex flex-col pb-32 animate-fade-in">
-      <div className="flex flex-col items-center px-4 pt-10 pb-4">
+      <div
+        className="flex flex-col items-center px-4 pb-4"
+        style={{ paddingTop: 'max(24px, env(safe-area-inset-top))' }}
+      >
         <p className="text-xs font-semibold text-white/40 uppercase tracking-widest mb-2">Room Code</p>
-        {/* Hero room code — tappable to copy */}
         <button
           onClick={handleCopyCode}
           className="text-6xl font-black tracking-[0.4em] text-yellow-400 glow-yellow mb-1 active:scale-95 transition-transform pl-[0.4em]"
         >
           {roomState.id}
         </button>
-        <p className="text-xs text-white/30 mb-6">Tap to copy invite link</p>
+        <p className="text-xs text-white/30 mb-5">Tap to copy invite link</p>
 
-        <div className="flex gap-2 w-full max-w-md">
-          <button
-            onClick={handleCopyCode}
-            className="flex-1 bg-white/10 hover:bg-white/15 text-white text-sm py-2.5 rounded-xl transition-colors font-medium"
-          >
-            🔗 Copy Link
-          </button>
-          <button
-            onClick={() => setShowInvite(true)}
-            className="flex-1 bg-yellow-400/20 hover:bg-yellow-400/30 text-yellow-400 text-sm py-2.5 rounded-xl font-semibold transition-colors"
-          >
-            👥 Invite Friend
-          </button>
-        </div>
+        <button
+          onClick={() => setShowInvite(true)}
+          className="bg-white/8 hover:bg-white/12 text-white/70 text-sm px-5 py-2 rounded-2xl font-semibold transition-colors"
+        >
+          Invite Friend
+        </button>
       </div>
 
       <div className="flex flex-col gap-3 px-4 w-full max-w-md mx-auto">
@@ -169,10 +163,10 @@ export default function LobbyPage() {
       {/* Invite friend modal */}
       {showInvite && (
         <div className="fixed inset-0 bg-black/70 flex items-end justify-center z-50 p-4">
-          <div className="bg-felt rounded-2xl p-6 w-full max-w-sm animate-slide-up">
+          <div className="bg-[#1a3a24] rounded-3xl p-6 w-full max-w-sm animate-slide-up">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-white">Invite a Friend</h3>
-              <button onClick={() => setShowInvite(false)} className="text-white/40 hover:text-white text-xl w-8 h-8 flex items-center justify-center">✕</button>
+              <h3 className="font-black text-white text-lg">Invite a Friend</h3>
+              <button onClick={() => setShowInvite(false)} className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-white/50 text-sm hover:bg-white/20 transition-colors">✕</button>
             </div>
             {onlineFriends.length === 0 ? (
               <p className="text-center text-white/40 text-sm py-6">No friends online right now.</p>
