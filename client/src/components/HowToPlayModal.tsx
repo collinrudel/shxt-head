@@ -57,21 +57,14 @@ export default function HowToPlayModal({ onClose }: { onClose: () => void }) {
           </Section>
 
           <Section title="Slam">
-            <p>If the top of the discard pile has <strong>3 of the same rank</strong>, any player — even out of turn — can Slam by playing the 4th matching card.</p>
+            <p>If the previous player's cards and your cards are <strong>the same rank and total 4</strong>, you can Slam out of turn.</p>
+            <p>Examples: they play 1, you have 3 matching. They play 2, you have 2 matching. They play 3, you have 1 matching.</p>
             <p>A successful Slam burns the pile and the slammer takes a turn.</p>
           </Section>
 
           <Section title="Card Values">
-            <p className="text-white/60 text-sm">Low → High: <span className="text-white font-semibold">3 · 4 · 6 · 8 · 9 · J · Q · K · A</span></p>
-            <p className="text-white/60 text-sm mt-1">Special (always playable): <span className="text-yellow-400 font-semibold">2 · 5 · 7 · 10</span></p>
-          </Section>
-
-          <Section title="Tips">
-            <ul>
-              <li>Save your <strong>10s</strong> for when the pile gets too high to beat — burn it and reset.</li>
-              <li>Put your highest cards face-up so they're easier to play later.</li>
-              <li>A 2 can always save you — it plays on anything and lets the next player start fresh.</li>
-            </ul>
+            <p className="text-white/60 text-sm">Low → High: <span className="text-white font-semibold">3 · 4 · 6 · 7 · 8 · 9 · 10 · J · Q · K · A</span></p>
+            <p className="text-white/60 text-sm mt-1">Always playable on anything: <span className="text-yellow-400 font-semibold">2 · 5</span></p>
           </Section>
 
         </div>
