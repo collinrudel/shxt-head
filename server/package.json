@@ -21,6 +21,9 @@
     "socket.io": "^4.7.4",
     "web-push": "^3.6.7"
   },
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.17",
