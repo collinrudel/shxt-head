@@ -10,7 +10,8 @@ interface GameOverScreenProps {
 export default function GameOverScreen({ gameState }: GameOverScreenProps) {
   const navigate = useNavigate();
   const actions = useGameActions();
-  const { myPlayerId, roomState, reset } = useGameStore();
+  const { roomState, reset } = useGameStore();
+  const myPlayerId = gameState.myPlayerId;
   const isHost = roomState?.hostId === myPlayerId;
   const winner = gameState.players.find(p => p.id === gameState.winnerId);
   const iWon = gameState.winnerId === myPlayerId;

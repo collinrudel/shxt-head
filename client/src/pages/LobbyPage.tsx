@@ -1,43 +1,57 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '@/store/gameStore';
 import { useGameActions } from '@/hooks/useGameActions';
-import { RoomConfig } from '@shared/types';
+import { useAuthStore } from '@/store/authStore';
+import { api } from '@/api';
+import { RoomConfig, FriendWithPresence } from '@shared/types';
+import FriendRow from '@/components/FriendRow';
 
 export default function LobbyPage() {
   const navigate = useNavigate();
   const actions = useGameActions();
-  const { roomState, myPlayerId, addToast } = useGameStore();
+  const { roomState, addToast } = useGameStore();
+  const user = useAuthStore(s => s.user);
+  const [showInvite, setShowInvite] = useState(false);
+  const [friends, setFriends] = useState<FriendWithPresence[]>([]);
 
   useEffect(() => {
     if (!roomState) navigate('/');
   }, [roomState, navigate]);
 
+  const loadFriends = useCallback(async () => {
+    try {
+      const { friends: f } = await api.get<{ friends: FriendWithPresence[] }>('/api/friends');
+      setFriends(f);
+    } catch { /* non-critical */ }
+  }, []);
+
+  useEffect(() => {
+    if (showInvite) loadFriends();
+  }, [showInvite, loadFriends]);
+
   if (!roomState) return null;
 
-  const isHost = roomState.hostId === myPlayerId;
-  const myPlayer = roomState.players.find(p => p.id === myPlayerId);
+  const isHost = roomState.hostId === user?.id;
+  const myPlayer = roomState.players.find(p => p.id === user?.id);
   const allReady = roomState.players.length >= 2 && roomState.players.every(p => p.isReady);
   const shareUrl = `${window.location.origin}/join/${roomState.id}`;
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(shareUrl).then(() => {
-      addToast('Link copied!', 'success');
-    });
+    navigator.clipboard.writeText(shareUrl).then(() => addToast('Link copied!', 'success'));
   };
 
   const handleDecks = (n: 1 | 2 | 3) => {
-    const newConfig: RoomConfig = { ...roomState.config, numDecks: n };
-    actions.updateConfig(newConfig);
+    actions.updateConfig({ ...roomState.config, numDecks: n } as RoomConfig);
   };
 
-  const handleStart = async () => {
-    try {
-      actions.startGame();
-    } catch (err: unknown) {
-      addToast(err instanceof Error ? err.message : 'Failed to start game', 'error');
-    }
+  const handleInvite = (friendUserId: string) => {
+    actions.inviteFriend(friendUserId);
+    addToast('Invite sent!', 'success');
+    setShowInvite(false);
   };
+
+  const onlineFriends = friends.filter(f => f.isOnline);
 
   return (
     <div className="min-h-screen flex flex-col items-center px-4 py-8">
@@ -53,12 +67,20 @@ export default function LobbyPage() {
           <p className="text-4xl font-black text-center tracking-[0.3em] text-yellow-400 mb-3">
             {roomState.id}
           </p>
-          <button
-            onClick={handleCopyLink}
-            className="w-full bg-felt-light hover:bg-green-700 text-white text-sm py-2 rounded-lg transition-colors"
-          >
-            Copy Invite Link
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleCopyLink}
+              className="flex-1 bg-felt-light hover:bg-green-700 text-white text-sm py-2 rounded-lg transition-colors"
+            >
+              Copy Invite Link
+            </button>
+            <button
+              onClick={() => setShowInvite(true)}
+              className="flex-1 bg-yellow-400 hover:bg-yellow-300 text-black text-sm py-2 rounded-lg font-semibold transition-colors"
+            >
+              Invite Friend
+            </button>
+          </div>
         </div>
 
         {/* Players list */}
@@ -110,7 +132,7 @@ export default function LobbyPage() {
           </div>
         )}
 
-        {/* Ready + Start buttons */}
+        {/* Ready + Start */}
         <div className="flex flex-col gap-3">
           <button
             onClick={() => actions.setReady(!myPlayer?.isReady)}
@@ -125,15 +147,41 @@ export default function LobbyPage() {
 
           {isHost && (
             <button
-              onClick={handleStart}
+              onClick={() => actions.startGame()}
               disabled={!allReady}
               className="w-full bg-yellow-400 hover:bg-yellow-300 disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold py-4 rounded-xl text-lg transition-colors"
             >
-              {allReady ? 'Start Game' : `Waiting for players (${roomState.players.filter(p => p.isReady).length}/${roomState.players.length} ready)`}
+              {allReady
+                ? 'Start Game'
+                : `Waiting (${roomState.players.filter(p => p.isReady).length}/${roomState.players.length} ready)`}
             </button>
           )}
         </div>
       </div>
+
+      {/* Invite friend modal */}
+      {showInvite && (
+        <div className="fixed inset-0 bg-black/70 flex items-end justify-center z-50 p-4">
+          <div className="bg-felt rounded-2xl p-6 w-full max-w-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-white">Invite a Friend</h3>
+              <button onClick={() => setShowInvite(false)} className="text-green-400 text-xl">✕</button>
+            </div>
+            {onlineFriends.length === 0 ? (
+              <p className="text-center text-green-500 text-sm py-4">No friends online right now.</p>
+            ) : (
+              onlineFriends.map(f => (
+                <FriendRow
+                  key={f.friendshipId}
+                  friend={f}
+                  inLobby
+                  onInvite={() => handleInvite(f.userId)}
+                />
+              ))
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

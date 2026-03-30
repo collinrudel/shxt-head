@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { socket } from '@/socket';
+import { getSocket } from '@/socket';
 import { useGameStore } from '@/store/gameStore';
 
 export function useSocketEvents() {
@@ -8,51 +8,49 @@ export function useSocketEvents() {
   const { setRoomState, setGameState, addToast, gameState } = useGameStore();
 
   useEffect(() => {
+    let socket: ReturnType<typeof getSocket>;
+    try {
+      socket = getSocket();
+    } catch {
+      return;
+    }
+
     socket.on('room:updated', (state) => {
       setRoomState(state);
     });
 
     socket.on('game:state_update', (state) => {
       setGameState(state);
-      // Navigate based on phase changes
-      if (state.phase === 'swap') {
-        navigate('/swap');
-      } else if (state.phase === 'playing') {
-        navigate('/game');
-      } else if (state.phase === 'game_over') {
-        navigate('/game');
-      }
+      if (state.phase === 'swap') navigate('/swap');
+      else if (state.phase === 'playing') navigate('/game');
+      else if (state.phase === 'game_over') navigate('/game');
     });
 
-    socket.on('game:error', ({ message }) => {
-      addToast(message, 'error');
-    });
-
-    socket.on('room:error', ({ message }) => {
-      addToast(message, 'error');
-    });
+    socket.on('game:error', ({ message }) => addToast(message, 'error'));
+    socket.on('room:error', ({ message }) => addToast(message, 'error'));
 
     socket.on('game:cards_burned', ({ reason }) => {
-      const msg = reason === 'ten_played' ? 'Pile burned by 10!' : '4 of a kind — pile burned!';
-      addToast(msg, 'success');
+      addToast(reason === 'ten_played' ? 'Pile burned by 10!' : '4 of a kind — pile burned!', 'success');
     });
 
     socket.on('game:pile_picked_up', ({ playerId, cardCount }) => {
-      const players = gameState?.players ?? [];
-      const name = players.find(p => p.id === playerId)?.name ?? 'Someone';
+      const name = gameState?.players.find(p => p.id === playerId)?.name ?? 'Someone';
       addToast(`${name} picked up ${cardCount} card${cardCount !== 1 ? 's' : ''}`, 'info');
     });
 
     socket.on('game:player_won', ({ playerId }) => {
-      const players = gameState?.players ?? [];
-      const name = players.find(p => p.id === playerId)?.name ?? 'Someone';
-      addToast(`🏆 ${name} wins!`, 'success');
+      const name = gameState?.players.find(p => p.id === playerId)?.name ?? 'Someone';
+      addToast(`${name} wins!`, 'success');
     });
 
     socket.on('game:blind_flip', ({ card, success }) => {
-      if (!success) {
-        addToast(`Blind flip: ${card.rank}${suitSymbol(card.suit)} — can't play it!`, 'error');
-      }
+      if (!success) addToast(`Blind flip: ${card.rank} — can't play it!`, 'error');
+    });
+
+    socket.on('lobby:invited', ({ roomId, inviterName }) => {
+      addToast(`${inviterName} invited you to a game! Tap to join.`, 'info');
+      // Navigate to join page — user can tap the toast
+      setTimeout(() => navigate(`/join/${roomId}`), 100);
     });
 
     return () => {
@@ -64,16 +62,7 @@ export function useSocketEvents() {
       socket.off('game:pile_picked_up');
       socket.off('game:player_won');
       socket.off('game:blind_flip');
+      socket.off('lobby:invited');
     };
   }, [navigate, setRoomState, setGameState, addToast, gameState]);
-}
-
-function suitSymbol(suit: string): string {
-  const map: Record<string, string> = {
-    hearts: '♥',
-    diamonds: '♦',
-    clubs: '♣',
-    spades: '♠',
-  };
-  return map[suit] ?? suit;
 }

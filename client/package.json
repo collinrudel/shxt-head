@@ -14,7 +14,7 @@
     "react-router-dom": "^6.22.0",
     "shxthead-shared": "*",
     "socket.io-client": "^4.7.4",
-    "zustand": "^4.5.0"
+    "zustand": "^4.5.7"
   },
   "devDependencies": {
     "@types/react": "^18.2.55",

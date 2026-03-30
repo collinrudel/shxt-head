@@ -109,6 +109,19 @@ export interface SwapInstruction {
 
 export type AckCallback<T> = (response: { ok: boolean; error?: string; data?: T }) => void;
 
+export interface AuthUser {
+  id: string;
+  username: string;
+}
+
+export interface FriendWithPresence {
+  friendshipId: string;
+  userId: string;
+  username: string;
+  isOnline: boolean;
+  lastSeenAt: string;
+}
+
 export interface ClientToServerEvents {
   'room:create': (payload: { playerName: string; config: RoomConfig }, cb: AckCallback<{ roomId: string }>) => void;
   'room:join': (payload: { roomId: string; playerName: string }, cb: AckCallback<void>) => void;
@@ -121,6 +134,7 @@ export interface ClientToServerEvents {
   'game:slam': (payload: { cardIds: string[] }) => void;
   'game:pickup_pile': () => void;
   'game:play_facedown': (payload: { cardId: string }) => void;
+  'lobby:invite_friend': (payload: { friendUserId: string }) => void;
 }
 
 export interface ServerToClientEvents {
@@ -132,4 +146,6 @@ export interface ServerToClientEvents {
   'game:player_won': (payload: { playerId: string }) => void;
   'game:blind_flip': (payload: { playerId: string; card: Card; success: boolean }) => void;
   'game:error': (error: { message: string }) => void;
+  'lobby:invited': (payload: { roomId: string; inviterName: string }) => void;
+  'friends:presence_update': (payload: { userId: string; isOnline: boolean; lastSeenAt: string }) => void;
 }

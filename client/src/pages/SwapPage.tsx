@@ -8,7 +8,8 @@ import Card from '@/components/Card';
 export default function SwapPage() {
   const navigate = useNavigate();
   const actions = useGameActions();
-  const { gameState, myPlayerId, addToast } = useGameStore();
+  const { gameState, addToast } = useGameStore();
+  const myPlayerId = gameState?.myPlayerId;
 
   const [selectedHandId, setSelectedHandId] = useState<string | null>(null);
   const [swaps, setSwaps] = useState<SwapInstruction[]>([]);

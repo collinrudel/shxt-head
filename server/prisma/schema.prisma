@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  lastSeenAt   DateTime @default(now())
+
+  sentRequests     Friendship[]     @relation("Requester")
+  receivedRequests Friendship[]     @relation("Addressee")
+  pushSubs         PushSubscription[]
+}
+
+model Friendship {
+  id          String           @id @default(uuid())
+  requester   User             @relation("Requester", fields: [requesterId], references: [id])
+  requesterId String
+  addressee   User             @relation("Addressee", fields: [addresseeId], references: [id])
+  addresseeId String
+  status      FriendshipStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+
+  @@unique([requesterId, addresseeId])
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+}
+
+model PushSubscription {
+  id           String   @id @default(uuid())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String
+  subscription Json
+  createdAt    DateTime @default(now())
+}

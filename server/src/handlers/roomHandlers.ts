@@ -1,6 +1,8 @@
 import { Server, Socket } from 'socket.io';
 import { ClientRoomState, GamePhase, RoomConfig } from 'shxthead-shared';
 import { RoomManager } from '../roomManager';
+import { presenceManager } from '../presenceManager';
+import prisma from '../db';
 
 function toClientRoomState(room: ReturnType<RoomManager['getRoom']>): ClientRoomState | null {
   if (!room) return null;
@@ -18,23 +20,30 @@ function toClientRoomState(room: ReturnType<RoomManager['getRoom']>): ClientRoom
 }
 
 export function registerRoomHandlers(io: Server, socket: Socket, roomManager: RoomManager): void {
-  socket.on('room:create', (payload: { playerName: string; config: RoomConfig }, cb) => {
+  const userId = socket.data.userId as string;
+
+  socket.on('room:create', async (payload: { playerName: string; config: RoomConfig }, cb) => {
     try {
-      const room = roomManager.createRoom(socket.id, payload.playerName, payload.config);
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { username: true } });
+      const playerName = user?.username ?? payload.playerName;
+      const room = roomManager.createRoom(userId, playerName, payload.config);
       socket.join(room.id);
       cb({ ok: true, data: { roomId: room.id } });
       const state = toClientRoomState(room);
       if (state) socket.emit('room:updated', state);
-    } catch (err) {
+    } catch {
       cb({ ok: false, error: 'Failed to create room' });
     }
   });
 
-  socket.on('room:join', (payload: { roomId: string; playerName: string }, cb) => {
+  socket.on('room:join', async (payload: { roomId: string; playerName: string }, cb) => {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { username: true } });
+    const playerName = user?.username ?? payload.playerName;
+
     const { room, error } = roomManager.joinRoom(
       payload.roomId.toUpperCase(),
-      socket.id,
-      payload.playerName
+      userId,
+      playerName
     );
 
     if (error || !room) {
@@ -49,11 +58,11 @@ export function registerRoomHandlers(io: Server, socket: Socket, roomManager: Ro
   });
 
   socket.on('room:leave', () => {
-    const room = roomManager.getRoomByPlayerId(socket.id);
+    const room = roomManager.getRoomByPlayerId(userId);
     if (!room) return;
 
     socket.leave(room.id);
-    const updatedRoom = roomManager.leaveRoom(room.id, socket.id);
+    const updatedRoom = roomManager.leaveRoom(room.id, userId);
     if (updatedRoom) {
       const state = toClientRoomState(updatedRoom);
       if (state) io.to(room.id).emit('room:updated', state);
@@ -61,10 +70,10 @@ export function registerRoomHandlers(io: Server, socket: Socket, roomManager: Ro
   });
 
   socket.on('lobby:ready', (payload: { ready: boolean }) => {
-    const room = roomManager.getRoomByPlayerId(socket.id);
+    const room = roomManager.getRoomByPlayerId(userId);
     if (!room || room.gameState.phase !== GamePhase.Lobby) return;
 
-    const pi = room.gameState.players.findIndex(p => p.id === socket.id);
+    const pi = room.gameState.players.findIndex(p => p.id === userId);
     if (pi === -1) return;
 
     const updatedPlayers = [...room.gameState.players];
@@ -79,8 +88,8 @@ export function registerRoomHandlers(io: Server, socket: Socket, roomManager: Ro
   });
 
   socket.on('lobby:update_config', (payload: { config: RoomConfig }) => {
-    const room = roomManager.getRoomByPlayerId(socket.id);
-    if (!room || room.hostId !== socket.id) return;
+    const room = roomManager.getRoomByPlayerId(userId);
+    if (!room || room.hostId !== userId) return;
     if (room.gameState.phase !== GamePhase.Lobby) return;
 
     const updated = roomManager.updateConfig(room.id, payload.config);
@@ -90,13 +99,25 @@ export function registerRoomHandlers(io: Server, socket: Socket, roomManager: Ro
     }
   });
 
-  socket.on('disconnect', () => {
-    const room = roomManager.getRoomByPlayerId(socket.id);
+  socket.on('lobby:invite_friend', async (payload: { friendUserId: string }) => {
+    const room = roomManager.getRoomByPlayerId(userId);
     if (!room) return;
-    const updatedRoom = roomManager.leaveRoom(room.id, socket.id);
-    if (updatedRoom) {
-      const state = toClientRoomState(updatedRoom);
-      if (state) io.to(room.id).emit('room:updated', state);
+
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { username: true } });
+    const inviterName = user?.username ?? 'Someone';
+
+    const friendSocketId = presenceManager.getSocketId(payload.friendUserId);
+    if (friendSocketId) {
+      // Friend is online — send real-time socket notification
+      io.to(friendSocketId).emit('lobby:invited', { roomId: room.id, inviterName });
+    } else {
+      // Friend is offline — send push notification
+      try {
+        const { sendGameInvitePush } = await import('./pushHandlers');
+        await sendGameInvitePush(payload.friendUserId, inviterName, room.id);
+      } catch {
+        // non-critical
+      }
     }
   });
 }

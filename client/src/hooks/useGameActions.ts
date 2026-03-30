@@ -1,7 +1,9 @@
-import { socket } from '@/socket';
+import { getSocket } from '@/socket';
 import { RoomConfig, SwapInstruction } from '@shared/types';
 
 export function useGameActions() {
+  const socket = getSocket();
+
   return {
     createRoom: (playerName: string, config: RoomConfig) =>
       new Promise<{ roomId: string }>((resolve, reject) => {
@@ -20,21 +22,14 @@ export function useGameActions() {
       }),
 
     leaveRoom: () => socket.emit('room:leave'),
-
     setReady: (ready: boolean) => socket.emit('lobby:ready', { ready }),
-
     updateConfig: (config: RoomConfig) => socket.emit('lobby:update_config', { config }),
-
     startGame: () => socket.emit('lobby:start_game'),
-
     confirmSwap: (swaps: SwapInstruction[]) => socket.emit('swap:confirm', { swaps }),
-
     playCards: (cardIds: string[]) => socket.emit('game:play_cards', { cardIds }),
-
     slam: (cardIds: string[]) => socket.emit('game:slam', { cardIds }),
-
     pickupPile: () => socket.emit('game:pickup_pile'),
-
     playFaceDown: (cardId: string) => socket.emit('game:play_facedown', { cardId }),
+    inviteFriend: (friendUserId: string) => socket.emit('lobby:invite_friend', { friendUserId }),
   };
 }

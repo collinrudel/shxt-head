@@ -1,7 +1,8 @@
 import { Server, Socket } from 'socket.io';
-import { ClientGameState, GamePhase, SwapInstruction } from 'shxthead-shared';
+import { GamePhase, SwapInstruction } from 'shxthead-shared';
 import { Room, RoomManager } from '../roomManager';
 import { buildClientState } from '../gameState';
+import { presenceManager } from '../presenceManager';
 import {
   startGame,
   confirmSwap,
@@ -11,12 +12,14 @@ import {
   processSlam,
   GameEvent,
 } from '../gameEngine';
-import { getSlamEligiblePlayerIds } from '../rules/turnAdvance';
 
 function emitStateUpdate(io: Server, room: Room): void {
   for (const player of room.gameState.players) {
     const clientState = buildClientState(room.gameState, player.id);
-    io.to(player.id).emit('game:state_update', clientState);
+    const socketId = presenceManager.getSocketId(player.id);
+    if (socketId) {
+      io.to(socketId).emit('game:state_update', clientState);
+    }
   }
 }
 
@@ -40,10 +43,12 @@ function broadcastEvents(io: Server, room: Room, events: GameEvent[]): void {
 }
 
 export function registerGameHandlers(io: Server, socket: Socket, roomManager: RoomManager): void {
+  const userId = socket.data.userId as string;
+
   socket.on('lobby:start_game', () => {
-    const room = roomManager.getRoomByPlayerId(socket.id);
+    const room = roomManager.getRoomByPlayerId(userId);
     if (!room) return;
-    if (room.hostId !== socket.id) {
+    if (room.hostId !== userId) {
       socket.emit('game:error', { message: 'Only the host can start the game' });
       return;
     }
@@ -63,19 +68,19 @@ export function registerGameHandlers(io: Server, socket: Socket, roomManager: Ro
   });
 
   socket.on('swap:confirm', (payload: { swaps: SwapInstruction[] }) => {
-    const room = roomManager.getRoomByPlayerId(socket.id);
+    const room = roomManager.getRoomByPlayerId(userId);
     if (!room || room.gameState.phase !== GamePhase.Swap) return;
 
-    const updated = confirmSwap(room, socket.id, payload.swaps);
+    const updated = confirmSwap(room, userId, payload.swaps);
     roomManager.updateRoom(updated);
     emitStateUpdate(io, updated);
   });
 
   socket.on('game:play_cards', (payload: { cardIds: string[] }) => {
-    const room = roomManager.getRoomByPlayerId(socket.id);
+    const room = roomManager.getRoomByPlayerId(userId);
     if (!room || room.gameState.phase !== GamePhase.Playing) return;
 
-    const { room: updated, events, error } = processPlayCards(room, socket.id, payload.cardIds);
+    const { room: updated, events, error } = processPlayCards(room, userId, payload.cardIds);
     if (error) {
       socket.emit('game:error', { message: error });
       return;
@@ -87,10 +92,10 @@ export function registerGameHandlers(io: Server, socket: Socket, roomManager: Ro
   });
 
   socket.on('game:pickup_pile', () => {
-    const room = roomManager.getRoomByPlayerId(socket.id);
+    const room = roomManager.getRoomByPlayerId(userId);
     if (!room || room.gameState.phase !== GamePhase.Playing) return;
 
-    const { room: updated, events, error } = processPickupPile(room, socket.id);
+    const { room: updated, events, error } = processPickupPile(room, userId);
     if (error) {
       socket.emit('game:error', { message: error });
       return;
@@ -102,10 +107,10 @@ export function registerGameHandlers(io: Server, socket: Socket, roomManager: Ro
   });
 
   socket.on('game:play_facedown', (payload: { cardId: string }) => {
-    const room = roomManager.getRoomByPlayerId(socket.id);
+    const room = roomManager.getRoomByPlayerId(userId);
     if (!room || room.gameState.phase !== GamePhase.Playing) return;
 
-    const { room: updated, events, error } = processPlayFaceDown(room, socket.id, payload.cardId);
+    const { room: updated, events, error } = processPlayFaceDown(room, userId, payload.cardId);
     if (error) {
       socket.emit('game:error', { message: error });
       return;
@@ -117,10 +122,10 @@ export function registerGameHandlers(io: Server, socket: Socket, roomManager: Ro
   });
 
   socket.on('game:slam', (payload: { cardIds: string[] }) => {
-    const room = roomManager.getRoomByPlayerId(socket.id);
+    const room = roomManager.getRoomByPlayerId(userId);
     if (!room || room.gameState.phase !== GamePhase.Playing) return;
 
-    const { room: updated, events, error } = processSlam(room, socket.id, payload.cardIds);
+    const { room: updated, events, error } = processSlam(room, userId, payload.cardIds);
     if (error) {
       socket.emit('game:error', { message: error });
       return;
