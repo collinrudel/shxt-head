@@ -12,6 +12,7 @@ import GamePage from '@/pages/GamePage';
 import LoginPage from '@/pages/LoginPage';
 import RegisterPage from '@/pages/RegisterPage';
 import FriendsPage from '@/pages/FriendsPage';
+import ProfilePage from '@/pages/ProfilePage';
 import Toast from '@/components/Toast';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -38,6 +39,7 @@ function AppInner() {
         <Route path="/swap" element={<RequireAuth><SwapPage /></RequireAuth>} />
         <Route path="/game" element={<RequireAuth><GamePage /></RequireAuth>} />
         <Route path="/friends" element={<RequireAuth><FriendsPage /></RequireAuth>} />
+        <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 

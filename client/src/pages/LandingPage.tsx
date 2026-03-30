@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useGameActions } from '@/hooks/useGameActions';
 import { useGameStore } from '@/store/gameStore';
 import { useAuthStore } from '@/store/authStore';
 import SegmentedControl from '@/components/SegmentedControl';
+import { getAvatarColor } from '@/pages/ProfilePage';
 
 function Spinner() {
   return <span className="inline-block w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />;
@@ -54,22 +55,34 @@ export default function LandingPage() {
     }
   };
 
+  const avatarColor = user ? getAvatarColor(user.username) : 'bg-felt-light';
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 animate-fade-in">
-      <div className="w-full max-w-sm">
-        <h1 className="text-6xl font-black text-center mb-2 tracking-[-0.03em]">
+    <div className="min-h-screen flex flex-col px-4 animate-fade-in">
+      {/* Nav header */}
+      <div className="flex items-center justify-between pt-safe pt-5 pb-4">
+        <button
+          onClick={() => navigate('/friends')}
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/15 text-lg transition-colors"
+          aria-label="Friends"
+        >
+          👥
+        </button>
+        <h1 className="text-2xl font-black tracking-[-0.02em]">
           <span className="text-white">Shxt</span><span className="text-yellow-400">Head</span>
         </h1>
+        <button
+          onClick={() => navigate('/profile')}
+          className={`w-10 h-10 rounded-full ${avatarColor} flex items-center justify-center text-white font-black text-base shadow-md transition-transform active:scale-95`}
+          aria-label="Profile"
+        >
+          {user?.username[0]?.toUpperCase()}
+        </button>
+      </div>
 
-        <div className="flex items-center justify-center gap-3 mb-10">
-          <p className="text-xl font-semibold text-white">Hey, {user?.username}!</p>
-          <Link
-            to="/friends"
-            className="bg-white/10 hover:bg-white/15 text-white/80 text-sm px-3 py-1 rounded-full transition-colors"
-          >
-            👥 Friends
-          </Link>
-        </div>
+      <div className="flex-1 flex flex-col items-center justify-center">
+      <div className="w-full max-w-sm">
+        <p className="text-center text-white/50 text-base mb-8">Hey, {user?.username}!</p>
 
         <SegmentedControl
           options={[
@@ -103,6 +116,7 @@ export default function LandingPage() {
         >
           {loading ? <Spinner /> : mode === 'create' ? 'Create Game' : 'Join Game'}
         </button>
+      </div>
       </div>
     </div>
   );

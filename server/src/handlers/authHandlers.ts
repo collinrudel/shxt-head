@@ -73,6 +73,36 @@ router.post('/login', async (req, res) => {
   }
 });
 
+router.patch('/profile', requireAuth, async (req, res) => {
+  const { currentPassword, newPassword } = req.body as {
+    currentPassword?: string;
+    newPassword?: string;
+  };
+
+  if (!currentPassword || !newPassword) {
+    res.status(400).json({ error: 'Current and new password are required' });
+    return;
+  }
+  if (newPassword.length < 6) {
+    res.status(400).json({ error: 'New password must be at least 6 characters' });
+    return;
+  }
+
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.userId } });
+    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+
+    const valid = await verifyPassword(currentPassword, user.passwordHash);
+    if (!valid) { res.status(401).json({ error: 'Current password is incorrect' }); return; }
+
+    const passwordHash = await hashPassword(newPassword);
+    await prisma.user.update({ where: { id: req.userId }, data: { passwordHash } });
+    res.json({ success: true });
+  } catch {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 router.get('/me', requireAuth, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
