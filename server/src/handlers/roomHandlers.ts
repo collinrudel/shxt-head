@@ -15,6 +15,7 @@ function toClientRoomState(room: ReturnType<RoomManager['getRoom']>): ClientRoom
       id: p.id,
       name: p.name,
       isReady: p.isReady,
+      isBot: p.isBot,
     })),
   };
 }
@@ -96,6 +97,28 @@ export function registerRoomHandlers(io: Server, socket: Socket, roomManager: Ro
     if (updated) {
       const state = toClientRoomState(updated);
       if (state) io.to(room.id).emit('room:updated', state);
+    }
+  });
+
+  socket.on('room:create_solo', async (payload: { playerName: string; botCount: number; numDecks: 1 | 2 | 3 }, cb) => {
+    try {
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { username: true } });
+      const playerName = user?.username ?? payload.playerName;
+      const config = { numDecks: payload.numDecks, maxPlayers: 8 };
+      let room = roomManager.createRoom(userId, playerName, config);
+      socket.join(room.id);
+
+      const botCount = Math.min(Math.max(1, payload.botCount), 6);
+      for (let i = 1; i <= botCount; i++) {
+        const updated = roomManager.addBotPlayer(room.id, `CPU ${i}`, `bot-${room.id}-${i}`);
+        if (updated) room = updated;
+      }
+
+      cb({ ok: true, data: { roomId: room.id } });
+      const state = toClientRoomState(room);
+      if (state) socket.emit('room:updated', state);
+    } catch {
+      cb({ ok: false, error: 'Failed to create solo room' });
     }
   });
 

@@ -104,9 +104,13 @@ export default function LobbyPage() {
                     <span className="text-white font-semibold text-sm truncate">{p.name}</span>
                   </div>
                 </div>
-                <span className={`text-xs font-bold ${p.isReady ? 'text-green-400' : 'text-white/30'}`}>
-                  {p.isReady ? '● READY' : '○ WAITING'}
-                </span>
+                {p.isBot ? (
+                  <span className="text-xs font-bold text-white/40">CPU</span>
+                ) : (
+                  <span className={`text-xs font-bold ${p.isReady ? 'text-green-400' : 'text-white/30'}`}>
+                    {p.isReady ? '● READY' : '○ WAITING'}
+                  </span>
+                )}
               </div>
             ))}
           </div>

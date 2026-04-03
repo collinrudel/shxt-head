@@ -55,7 +55,7 @@ router.post('/register', async (req, res) => {
     const passwordHash = await hashPassword(password);
     const user = await prisma.user.create({
       data: { username, passwordHash },
-      select: { id: true, username: true },
+      select: { id: true, username: true, trophies: true, wins: true },
     });
 
     const token = signToken(user.id);
@@ -87,7 +87,7 @@ router.post('/login', async (req, res) => {
     }
 
     const token = signToken(user.id);
-    res.json({ user: { id: user.id, username: user.username }, token });
+    res.json({ user: { id: user.id, username: user.username, trophies: user.trophies, wins: user.wins }, token });
   } catch {
     res.status(500).json({ error: 'Server error' });
   }
@@ -127,7 +127,7 @@ router.get('/me', requireAuth, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.userId },
-      select: { id: true, username: true },
+      select: { id: true, username: true, trophies: true, wins: true },
     });
     if (!user) {
       res.status(404).json({ error: 'User not found' });

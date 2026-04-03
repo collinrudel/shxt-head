@@ -141,6 +141,31 @@ export class RoomManager {
     return undefined;
   }
 
+  addBotPlayer(roomId: string, botName: string, botId: string): Room | undefined {
+    const room = this.rooms.get(roomId);
+    if (!room) return undefined;
+    const updatedRoom: Room = {
+      ...room,
+      gameState: {
+        ...room.gameState,
+        players: [
+          ...room.gameState.players,
+          {
+            id: botId,
+            name: botName,
+            cards: { hand: [], faceUp: [], faceDown: [] },
+            isReady: true,
+            swapConfirmed: false,
+            hasWon: false,
+            isBot: true,
+          },
+        ],
+      },
+    };
+    this.rooms.set(roomId, updatedRoom);
+    return updatedRoom;
+  }
+
   updateConfig(roomId: string, config: RoomConfig): Room | undefined {
     const room = this.rooms.get(roomId);
     if (!room) return undefined;

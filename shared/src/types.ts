@@ -48,6 +48,7 @@ export interface Player {
   isReady: boolean;
   swapConfirmed: boolean;
   hasWon: boolean;
+  isBot?: boolean;
 }
 
 export interface GameState {
@@ -73,6 +74,7 @@ export interface ClientPlayer {
   faceUpCards: Card[];   // visible to all players
   faceDownCount: number;
   myCards?: PlayerCards;
+  isBot?: boolean;
 }
 
 export interface ClientGameState {
@@ -99,7 +101,7 @@ export interface ClientRoomState {
   hostId: string;
   config: RoomConfig;
   phase: GamePhase;
-  players: { id: string; name: string; isReady: boolean }[];
+  players: { id: string; name: string; isReady: boolean; isBot?: boolean }[];
 }
 
 export interface SwapInstruction {
@@ -113,6 +115,8 @@ export interface AuthUser {
   id: string;
   username: string;
   isGuest?: boolean;
+  trophies?: number;
+  wins?: number;
 }
 
 export interface FriendWithPresence {
@@ -121,10 +125,12 @@ export interface FriendWithPresence {
   username: string;
   isOnline: boolean;
   lastSeenAt: string;
+  trophies?: number;
 }
 
 export interface ClientToServerEvents {
   'room:create': (payload: { playerName: string; config: RoomConfig }, cb: AckCallback<{ roomId: string }>) => void;
+  'room:create_solo': (payload: { playerName: string; botCount: number; numDecks: 1 | 2 | 3 }, cb: AckCallback<{ roomId: string }>) => void;
   'room:join': (payload: { roomId: string; playerName: string }, cb: AckCallback<void>) => void;
   'room:leave': () => void;
   'lobby:ready': (payload: { ready: boolean }) => void;
@@ -147,6 +153,7 @@ export interface ServerToClientEvents {
   'game:player_won': (payload: { playerId: string }) => void;
   'game:blind_flip': (payload: { playerId: string; card: Card; success: boolean }) => void;
   'game:error': (error: { message: string }) => void;
+  'game:trophies_awarded': (payload: { trophies: number; newTotal: number }) => void;
   'lobby:invited': (payload: { roomId: string; inviterName: string }) => void;
   'friends:presence_update': (payload: { userId: string; isOnline: boolean; lastSeenAt: string }) => void;
 }

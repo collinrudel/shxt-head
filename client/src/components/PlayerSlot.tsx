@@ -34,6 +34,8 @@ export default function PlayerSlot({ player, gameState, compact }: PlayerSlotPro
             ? 'bg-yellow-400 text-black'
             : canSlam
             ? 'bg-orange-500 text-white'
+            : player.isBot
+            ? 'bg-white/10 text-white/40'
             : 'bg-felt-light text-green-100'
         }`}
       >

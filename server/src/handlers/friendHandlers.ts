@@ -15,8 +15,8 @@ router.get('/', async (req, res) => {
         OR: [{ requesterId: req.userId }, { addresseeId: req.userId }],
       },
       include: {
-        requester: { select: { id: true, username: true, lastSeenAt: true } },
-        addressee: { select: { id: true, username: true, lastSeenAt: true } },
+        requester: { select: { id: true, username: true, lastSeenAt: true, trophies: true } },
+        addressee: { select: { id: true, username: true, lastSeenAt: true, trophies: true } },
       },
     });
 
@@ -28,6 +28,7 @@ router.get('/', async (req, res) => {
         username: friend.username,
         isOnline: presenceManager.isOnline(friend.id),
         lastSeenAt: friend.lastSeenAt.toISOString(),
+        trophies: friend.trophies,
       };
     });
 

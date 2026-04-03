@@ -13,6 +13,14 @@ export function useGameActions() {
         });
       }),
 
+    createSoloRoom: (playerName: string, botCount: number, numDecks: 1 | 2 | 3) =>
+      new Promise<{ roomId: string }>((resolve, reject) => {
+        socket.emit('room:create_solo', { playerName, botCount, numDecks }, (res) => {
+          if (res.ok && res.data) resolve(res.data);
+          else reject(new Error(res.error ?? 'Failed to create solo room'));
+        });
+      }),
+
     joinRoom: (roomId: string, playerName: string) =>
       new Promise<void>((resolve, reject) => {
         socket.emit('room:join', { roomId, playerName }, (res) => {

@@ -19,9 +19,11 @@ export default function LandingPage() {
   const user = useAuthStore(s => s.user);
 
   const [roomCode, setRoomCode] = useState(urlRoomId ?? '');
-  const [mode, setMode] = useState<'create' | 'join'>(urlRoomId ? 'join' : 'create');
+  const [mode, setMode] = useState<'create' | 'join' | 'solo'>(urlRoomId ? 'join' : 'create');
   const [loading, setLoading] = useState(false);
   const [showRules, setShowRules] = useState(false);
+  const [botCount, setBotCount] = useState(1);
+  const [soloDecks, setSoloDecks] = useState<1 | 2 | 3>(1);
 
   useEffect(() => {
     if (urlRoomId) {
@@ -38,6 +40,19 @@ export default function LandingPage() {
       navigate('/lobby');
     } catch (err: unknown) {
       addToast(err instanceof Error ? err.message : 'Failed to create room', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSolo = async () => {
+    setLoading(true);
+    try {
+      const { roomId } = await actions.createSoloRoom(user?.username ?? '', botCount, soloDecks);
+      setCurrentRoomId(roomId);
+      navigate('/lobby');
+    } catch (err: unknown) {
+      addToast(err instanceof Error ? err.message : 'Failed to create solo game', 'error');
     } finally {
       setLoading(false);
     }
@@ -104,6 +119,7 @@ export default function LandingPage() {
             options={[
               { value: 'create', label: 'Create Game' },
               { value: 'join', label: 'Join Game' },
+              { value: 'solo', label: 'Solo' },
             ]}
             value={mode}
             onChange={setMode}
@@ -125,12 +141,45 @@ export default function LandingPage() {
             </div>
           )}
 
+          {mode === 'solo' && (
+            <div className="mb-6 animate-fade-in flex flex-col gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">CPU Opponents</label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5, 6].map(n => (
+                    <button
+                      key={n}
+                      onClick={() => setBotCount(n)}
+                      className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition-colors ${botCount === n ? 'bg-yellow-400 text-black' : 'bg-white/10 text-white/60 hover:bg-white/15'}`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">Decks</label>
+                <div className="flex gap-2">
+                  {([1, 2, 3] as const).map(n => (
+                    <button
+                      key={n}
+                      onClick={() => setSoloDecks(n)}
+                      className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition-colors ${soloDecks === n ? 'bg-yellow-400 text-black' : 'bg-white/10 text-white/60 hover:bg-white/15'}`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           <button
-            onClick={mode === 'create' ? handleCreate : handleJoin}
+            onClick={mode === 'create' ? handleCreate : mode === 'join' ? handleJoin : handleSolo}
             disabled={loading}
             className="w-full bg-gradient-to-b from-yellow-400 to-yellow-300 hover:from-yellow-300 hover:to-yellow-200 disabled:opacity-50 text-black font-bold py-4 rounded-2xl text-base shadow-lg shadow-yellow-400/20 transition-all flex items-center justify-center gap-2"
           >
-            {loading ? <Spinner /> : mode === 'create' ? 'Create Game' : 'Join Game'}
+            {loading ? <Spinner /> : mode === 'create' ? 'Create Game' : mode === 'join' ? 'Join Game' : 'Start Solo Game'}
           </button>
 
           <button

@@ -1,4 +1,5 @@
 import { FriendWithPresence } from '@shared/types';
+import TierBadge from './TierBadge';
 
 interface FriendRowProps {
   friend: FriendWithPresence;
@@ -42,7 +43,10 @@ export default function FriendRow({ friend, onInvite, onAccept, onDecline, onRem
 
       {/* Name + presence */}
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-[15px] text-white truncate">{friend.username}</p>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <p className="font-semibold text-[15px] text-white truncate">{friend.username}</p>
+          {typeof friend.trophies === 'number' && <TierBadge trophies={friend.trophies} />}
+        </div>
         {!isPending && (
           <p className="text-xs text-white/40">
             {friend.isOnline ? 'Online' : `Last seen ${formatLastSeen(friend.lastSeenAt)}`}

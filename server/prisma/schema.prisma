@@ -13,6 +13,8 @@ model User {
   passwordHash String
   createdAt    DateTime @default(now())
   lastSeenAt   DateTime @default(now())
+  trophies     Int      @default(0)
+  wins         Int      @default(0)
 
   sentRequests     Friendship[]     @relation("Requester")
   receivedRequests Friendship[]     @relation("Addressee")

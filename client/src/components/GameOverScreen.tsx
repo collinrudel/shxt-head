@@ -1,7 +1,9 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ClientGameState } from '@shared/types';
 import { useGameStore } from '@/store/gameStore';
 import { useGameActions } from '@/hooks/useGameActions';
+import { getSocket } from '@/socket';
 
 interface GameOverScreenProps {
   gameState: ClientGameState;
@@ -15,6 +17,18 @@ export default function GameOverScreen({ gameState }: GameOverScreenProps) {
   const isHost = roomState?.hostId === myPlayerId;
   const winner = gameState.players.find(p => p.id === gameState.winnerId);
   const iWon = gameState.winnerId === myPlayerId;
+
+  const [trophiesAwarded, setTrophiesAwarded] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!iWon) return;
+    const socket = getSocket();
+    const handler = ({ trophies }: { trophies: number; newTotal: number }) => {
+      setTrophiesAwarded(trophies);
+    };
+    socket.on('game:trophies_awarded', handler);
+    return () => { socket.off('game:trophies_awarded', handler); };
+  }, [iWon]);
 
   const handlePlayAgain = () => {
     navigate('/lobby');
@@ -44,6 +58,12 @@ export default function GameOverScreen({ gameState }: GameOverScreenProps) {
         <p className={`text-base mb-2 ${iWon ? 'text-yellow-400/80' : 'text-white/50'}`}>
           {iWon ? 'ShxtHead Champion' : 'The cards weren\'t kind.'}
         </p>
+
+        {iWon && trophiesAwarded !== null && (
+          <p className="text-yellow-400 font-bold text-lg mb-2 animate-fade-in">
+            +{trophiesAwarded} trophies
+          </p>
+        )}
 
         <p className="text-white/30 text-sm mb-12">
           {iWon ? 'You got rid of all your cards first!' : 'Better luck next time!'}

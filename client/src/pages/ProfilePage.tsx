@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { api } from '@/api';
 import { disconnectSocket } from '@/socket';
+import TierBadge from '@/components/TierBadge';
 
 const AVATAR_COLORS = [
   { value: 'bg-indigo-600', label: 'Indigo' },
@@ -200,6 +201,17 @@ export default function ProfilePage() {
             {user.username[0]?.toUpperCase()}
           </div>
           <p className="text-2xl font-black text-white tracking-tight">{user.username}</p>
+          {typeof user.trophies === 'number' && (
+            <div className="flex flex-col items-center gap-1.5 mt-3">
+              <TierBadge trophies={user.trophies} />
+              <p className="text-white/50 text-sm">
+                <span className="text-yellow-400 font-bold">{user.trophies}</span> trophies
+                {typeof user.wins === 'number' && (
+                  <span> · <span className="text-white font-semibold">{user.wins}</span> wins</span>
+                )}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Avatar color picker */}

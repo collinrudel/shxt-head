@@ -16,6 +16,7 @@ export function buildClientState(state: GameState, forPlayerId: string): ClientG
       faceUpCards: p.cards.faceUp,   // visible to everyone
       faceDownCount: p.cards.faceDown.length,
       myCards: isMe ? p.cards : undefined,
+      isBot: p.isBot,
     };
   });
 
